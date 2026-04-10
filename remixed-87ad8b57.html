@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bible Quiz Challenge 🌟</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sky: #1a1a6e;
+    --gold: #FFD700;
+    --orange: #FF6B35;
+    --green: #2ECC71;
+    --red: #E74C3C;
+    --light: #F0F4FF;
+    --card: #ffffff;
+    --purple: #7C3AED;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Nunito', sans-serif; background: var(--sky); min-height: 100vh; overflow-x: hidden; position: relative; }
+  body::before {
+    content: '✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦';
+    position: fixed; top: 10px; left: 0; right: 0; text-align: center;
+    color: rgba(255,255,255,0.15); font-size: 22px; letter-spacing: 8px; pointer-events: none; z-index: 0;
+  }
+  .wrapper { max-width: 760px; margin: 0 auto; padding: 20px 16px 60px; position: relative; z-index: 1; }
+  .header { text-align: center; padding: 28px 20px 20px; animation: dropIn 0.7s cubic-bezier(.23,1.2,.5,1) both; }
+  .header .crown { font-size: 52px; display: block; margin-bottom: 4px; animation: bounce 2s infinite; }
+  .header h1 { font-family: 'Fredoka One', cursive; font-size: clamp(2rem, 7vw, 3.2rem); color: var(--gold); text-shadow: 3px 3px 0 rgba(0,0,0,0.3); line-height: 1.1; }
+  .header p { color: rgba(255,255,255,0.8); font-size: 1rem; font-weight: 600; margin-top: 6px; }
+  .progress-wrap { background: rgba(255,255,255,0.15); border-radius: 30px; height: 14px; margin: 18px 0 10px; overflow: hidden; border: 2px solid rgba(255,255,255,0.2); }
+  .progress-bar { height: 100%; background: linear-gradient(90deg, var(--gold), var(--orange)); border-radius: 30px; transition: width 0.5s ease; position: relative; }
+  .progress-bar::after { content: '⭐'; position: absolute; right: -2px; top: 50%; transform: translateY(-50%); font-size: 18px; }
+  .progress-label { display: flex; justify-content: space-between; color: rgba(255,255,255,0.7); font-size: 0.82rem; font-weight: 700; margin-bottom: 18px; }
+  .score-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--gold); color: #1a1a6e; font-family: 'Fredoka One', cursive; font-size: 1.1rem; padding: 6px 18px; border-radius: 30px; margin-bottom: 20px; box-shadow: 0 4px 0 rgba(0,0,0,0.2); animation: pulse 2s infinite; }
+  .section-header { background: linear-gradient(135deg, var(--purple), #4B0082); border-radius: 18px 18px 0 0; padding: 14px 22px; display: flex; align-items: center; gap: 10px; border: 3px solid rgba(255,255,255,0.2); border-bottom: none; }
+  .section-header .tag { background: var(--gold); color: #1a1a6e; font-family: 'Fredoka One', cursive; font-size: 0.78rem; padding: 3px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px; }
+  .section-header h2 { font-family: 'Fredoka One', cursive; color: white; font-size: 1.05rem; }
+  .question-card { background: var(--card); border-radius: 0 0 20px 20px; padding: 24px 24px 28px; border: 3px solid rgba(255,255,255,0.2); border-top: none; margin-bottom: 22px; animation: slideUp 0.4s ease both; box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+  .q-number { display: inline-block; background: var(--orange); color: white; font-family: 'Fredoka One', cursive; font-size: 0.85rem; padding: 2px 12px; border-radius: 20px; margin-bottom: 10px; }
+  .question-text { font-size: 1.05rem; font-weight: 700; color: #1a1a2e; line-height: 1.55; margin-bottom: 18px; }
+  .blank-input { border: 3px solid #CBD5E0; border-radius: 12px; padding: 10px 16px; font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 700; width: 100%; outline: none; transition: all 0.2s; color: #1a1a2e; background: #F7F9FF; }
+  .blank-input:focus { border-color: var(--purple); background: white; box-shadow: 0 0 0 4px rgba(124,58,237,0.15); }
+  .blank-input.correct { border-color: var(--green); background: #F0FFF4; color: var(--green); }
+  .blank-input.wrong { border-color: var(--red); background: #FFF5F5; color: var(--red); }
+  .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+  @media(max-width: 480px) { .options-grid { grid-template-columns: 1fr; } }
+  .option-btn { background: #F7F9FF; border: 3px solid #CBD5E0; border-radius: 14px; padding: 12px 14px; font-family: 'Nunito', sans-serif; font-size: 0.92rem; font-weight: 700; color: #1a1a2e; cursor: pointer; text-align: left; transition: all 0.2s; display: flex; align-items: center; gap: 8px; line-height: 1.3; }
+  .option-btn:hover:not(:disabled) { border-color: var(--purple); background: #EDE9FE; transform: translateY(-2px); }
+  .option-btn.correct { border-color: var(--green); background: #F0FFF4; color: #276749; }
+  .option-btn.wrong { border-color: var(--red); background: #FFF5F5; color: #c0392b; }
+  .option-btn:disabled { cursor: default; transform: none; }
+  .opt-letter { width: 28px; height: 28px; border-radius: 50%; background: var(--purple); color: white; font-family: 'Fredoka One', cursive; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .option-btn.correct .opt-letter { background: var(--green); }
+  .option-btn.wrong .opt-letter { background: var(--red); }
+  .tf-grid { display: flex; gap: 12px; margin-top: 4px; }
+  .tf-btn { flex: 1; padding: 14px; font-family: 'Fredoka One', cursive; font-size: 1.15rem; border-radius: 16px; border: 3px solid; cursor: pointer; transition: all 0.2s; text-align: center; }
+  .tf-btn.true-btn { border-color: var(--green); color: var(--green); background: #F0FFF4; }
+  .tf-btn.false-btn { border-color: var(--red); color: var(--red); background: #FFF5F5; }
+  .tf-btn.correct { background: var(--green); color: white; }
+  .tf-btn.wrong { background: var(--red); color: white; }
+  .tf-btn:hover:not(:disabled) { transform: scale(1.04); }
+  .tf-btn:disabled { cursor: default; transform: none; }
+  .feedback { margin-top: 14px; padding: 12px 16px; border-radius: 12px; font-weight: 700; font-size: 0.92rem; display: none; animation: popIn 0.3s cubic-bezier(.23,1.4,.5,1) both; }
+  .feedback.show { display: block; }
+  .feedback.correct-fb { background: #F0FFF4; border: 2px solid var(--green); color: #276749; }
+  .feedback.wrong-fb { background: #FFF5F5; border: 2px solid var(--red); color: #c0392b; }
+  .check-btn { margin-top: 14px; background: linear-gradient(135deg, var(--purple), #4B0082); color: white; border: none; padding: 11px 26px; font-family: 'Fredoka One', cursive; font-size: 1rem; border-radius: 30px; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,0.25); transition: all 0.2s; }
+  .check-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 rgba(0,0,0,0.25); }
+  .check-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.25); }
+  .results-screen { display: none; text-align: center; background: white; border-radius: 24px; padding: 40px 28px; box-shadow: 0 12px 40px rgba(0,0,0,0.3); animation: popIn 0.5s cubic-bezier(.23,1.4,.5,1) both; }
+  .results-screen.show { display: block; }
+  .results-trophy { font-size: 80px; display: block; margin-bottom: 10px; animation: bounce 1s infinite; }
+  .results-title { font-family: 'Fredoka One', cursive; font-size: 2.2rem; color: var(--sky); margin-bottom: 8px; }
+  .results-score { font-family: 'Fredoka One', cursive; font-size: 4rem; color: var(--orange); line-height: 1; margin: 10px 0; }
+  .results-msg { font-size: 1.05rem; font-weight: 700; color: #555; margin-bottom: 28px; }
+  .restart-btn { background: linear-gradient(135deg, var(--orange), #c0392b); color: white; border: none; padding: 14px 36px; font-family: 'Fredoka One', cursive; font-size: 1.2rem; border-radius: 30px; cursor: pointer; box-shadow: 0 5px 0 rgba(0,0,0,0.2); transition: all 0.2s; }
+  .restart-btn:hover { transform: translateY(-2px); }
+  .nav-row { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; gap: 12px; }
+  .nav-btn { background: rgba(255,255,255,0.15); color: white; border: 2px solid rgba(255,255,255,0.3); padding: 10px 22px; font-family: 'Fredoka One', cursive; font-size: 0.95rem; border-radius: 30px; cursor: pointer; transition: all 0.2s; }
+  .nav-btn:hover { background: rgba(255,255,255,0.25); }
+  .nav-btn:disabled { opacity: 0.4; cursor: default; }
+  .quiz-counter { color: rgba(255,255,255,0.7); font-weight: 700; font-size: 0.9rem; }
+  .week-label { text-align: center; margin: 30px 0 12px; }
+  .week-label span { background: var(--orange); color: white; font-family: 'Fredoka One', cursive; font-size: 0.9rem; padding: 5px 20px; border-radius: 30px; display: inline-block; box-shadow: 0 3px 0 rgba(0,0,0,0.2); }
+  @keyframes dropIn { from { opacity:0; transform: translateY(-30px); } to { opacity:1; transform:none; } }
+  @keyframes slideUp { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform:none; } }
+  @keyframes popIn { from { opacity:0; transform: scale(0.85); } to { opacity:1; transform: scale(1); } }
+  @keyframes bounce { 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-8px);} }
+  @keyframes pulse { 0%,100%{ box-shadow:0 4px 0 rgba(0,0,0,.2);} 50%{ box-shadow:0 4px 20px rgba(255,215,0,.5);} }
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="header">
+    <span class="crown">👑</span>
+    <h1>Bible Quiz Challenge</h1>
+    <p>Test your Scripture knowledge! ✨ Ages 15 & Under</p>
+  </div>
+
+  <div id="quiz-area">
+    <div style="display:flex; justify-content:center; margin-bottom:4px;">
+      <div class="score-badge">⭐ Score: <span id="score-display">0</span> / <span id="total-display">0</span></div>
+    </div>
+    <div class="progress-label">
+      <span>Question <span id="q-current">1</span> of <span id="q-total">20</span></span>
+      <span id="pct-label">0%</span>
+    </div>
+    <div class="progress-wrap"><div class="progress-bar" id="progress-bar" style="width:0%"></div></div>
+    <div id="question-container"></div>
+    <div class="nav-row">
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)" disabled>← Back</button>
+      <span class="quiz-counter" id="nav-counter">1 / 20</span>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next →</button>
+    </div>
+  </div>
+
+  <div class="results-screen" id="results-screen">
+    <span class="results-trophy" id="trophy">🏆</span>
+    <div class="results-title" id="result-title">Amazing Job!</div>
+    <div class="results-score" id="result-score">0/20</div>
+    <div class="results-msg" id="result-msg">Keep studying God's Word!</div>
+    <button class="restart-btn" onclick="restartQuiz()">🔄 Try Again!</button>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [
+  // ===== FROM THE VIDEOS =====
+  {
+    section: "From the Videos",
+    ref: "Revelation 12:11",
+    type: "fitb",
+    template: "And they overcame him by the blood of the ______ and by the word of their testimony.",
+    answers: ["lamb"]
+  },
+  {
+    section: "From the Videos",
+    ref: "Revelation 12:11",
+    type: "mcq",
+    question: "In Revelation 12:11, what did they NOT love even unto?",
+    options: ["Their lives", "Their money", "Their friends", "Their church"],
+    correct: 0
+  },
+  {
+    section: "From the Videos",
+    ref: "Deuteronomy 6:7",
+    type: "fitb",
+    template: "You shall ______ them diligently to your children, and shall talk of them when you sit in your house.",
+    answers: ["teach"]
+  },
+  {
+    section: "From the Videos",
+    ref: "Deuteronomy 6:7",
+    type: "truefalse",
+    question: "Deuteronomy 6:7 says we should talk about God's commandments only in church.",
+    correct: false
+  },
+  {
+    section: "From the Videos",
+    ref: "Galatians 6:7",
+    type: "fitb",
+    template: "Do not be deceived, God is not ______; for whatever a man sows, that he will also reap.",
+    answers: ["mocked"]
+  },
+  {
+    section: "From the Videos",
+    ref: "Galatians 6:7",
+    type: "mcq",
+    question: "Galatians 6:7 teaches that whatever a man ______, that he will also reap.",
+    options: ["Prays", "Sows", "Eats", "Speaks"],
+    correct: 1
+  },
+  {
+    section: "From the Videos",
+    ref: "Mark 6:7",
+    type: "fitb",
+    template: "Jesus sent them out two by two and gave them power over ______ spirits.",
+    answers: ["unclean"]
+  },
+  {
+    section: "From the Videos",
+    ref: "Mark 6:7",
+    type: "truefalse",
+    question: "In Mark 6:7, Jesus sent the disciples out one by one.",
+    correct: false
+  },
+  {
+    section: "From the Videos",
+    ref: "Hebrews 6:7",
+    type: "mcq",
+    question: "Hebrews 6:7 compares receiving God's blessing to land that drinks in ______ and produces a useful crop.",
+    options: ["sunlight", "rain", "dew", "wind"],
+    correct: 1
+  },
+  {
+    section: "From the Videos",
+    ref: "Revelation 6:7",
+    type: "fitb",
+    template: "In Revelation 6:7, when the fourth seal was opened, John heard the voice of the fourth ______ creature saying 'Come!'",
+    answers: ["living"]
+  },
+
+  // ===== WEEK 1 — 2 Peter 3:18 =====
+  {
+    section: "📅 Week 1 — 2 Peter 3:18",
+    ref: "2 Peter 3:18",
+    type: "fitb",
+    template: "But ______ in the grace and knowledge of our Lord and Savior Jesus Christ.",
+    answers: ["grow"]
+  },
+  {
+    section: "📅 Week 1 — 2 Peter 3:18",
+    ref: "2 Peter 3:18",
+    type: "mcq",
+    question: "2 Peter 3:18 says to grow in grace and the ______ of our Lord Jesus Christ.",
+    options: ["Power", "Knowledge", "Love", "Peace"],
+    correct: 1
+  },
+  {
+    section: "📅 Week 1 — 2 Peter 3:18",
+    ref: "2 Peter 3:18",
+    type: "truefalse",
+    question: "2 Peter 3:18 ends with 'To Him be the glory both now and forever. Amen.'",
+    correct: true
+  },
+
+  // ===== WEEK 2 — Proverbs 3:5-6 =====
+  {
+    section: "📅 Week 2 — Proverbs 3:5-6",
+    ref: "Proverbs 3:5",
+    type: "fitb",
+    template: "Trust in the LORD with all your ______; and lean not on your own understanding.",
+    answers: ["heart"]
+  },
+  {
+    section: "📅 Week 2 — Proverbs 3:5-6",
+    ref: "Proverbs 3:6",
+    type: "fitb",
+    template: "In all your ways ______ Him, and He shall direct your paths.",
+    answers: ["acknowledge"]
+  },
+  {
+    section: "📅 Week 2 — Proverbs 3:5-6",
+    ref: "Proverbs 3:5",
+    type: "mcq",
+    question: "Proverbs 3:5 tells us NOT to lean on our own what?",
+    options: ["Strength", "Ideas", "Understanding", "Money"],
+    correct: 2
+  },
+  {
+    section: "📅 Week 2 — Proverbs 3:5-6",
+    ref: "Proverbs 3:6",
+    type: "truefalse",
+    question: "Proverbs 3:6 promises that if we acknowledge God, He will direct our paths.",
+    correct: true
+  },
+
+  // ===== WEEK 3 — Matthew 5:14 =====
+  {
+    section: "📅 Week 3 — Matthew 5:14",
+    ref: "Matthew 5:14",
+    type: "fitb",
+    template: "You are the ______ of the world. A city that is set on a hill cannot be hidden.",
+    answers: ["light"]
+  },
+  {
+    section: "📅 Week 3 — Matthew 5:14",
+    ref: "Matthew 5:14",
+    type: "mcq",
+    question: "In Matthew 5:14, Jesus says a city set on a ______ cannot be hidden.",
+    options: ["Mountain", "Hill", "Cloud", "Rock"],
+    correct: 1
+  },
+  {
+    section: "📅 Week 3 — Matthew 5:14",
+    ref: "Matthew 5:14",
+    type: "truefalse",
+    question: "Matthew 5:14 says 'You are the salt of the world.'",
+    correct: false
+  },
+
+  // ===== WEEK 4 — 1 John 4:8 =====
+  {
+    section: "📅 Week 4 — 1 John 4:8",
+    ref: "1 John 4:8",
+    type: "fitb",
+    template: "He who does not ______ does not know God, for God is love.",
+    answers: ["love"]
+  },
+  {
+    section: "📅 Week 4 — 1 John 4:8",
+    ref: "1 John 4:8",
+    type: "mcq",
+    question: "1 John 4:8 reveals that God is what?",
+    options: ["Power", "Light", "Love", "Truth"],
+    correct: 2
+  },
+  {
+    section: "📅 Week 4 — 1 John 4:8",
+    ref: "1 John 4:8",
+    type: "truefalse",
+    question: "According to 1 John 4:8, if someone does not love, they do not know God.",
+    correct: true
+  },
+
+  // ===== WEEK 5 — Psalm 46:10 =====
+  {
+    section: "📅 Week 5 — Psalm 46:10",
+    ref: "Psalm 46:10",
+    type: "fitb",
+    template: "Be ______ and know that I am God; I will be exalted among the nations.",
+    answers: ["still"]
+  },
+  {
+    section: "📅 Week 5 — Psalm 46:10",
+    ref: "Psalm 46:10",
+    type: "mcq",
+    question: "Psalm 46:10 says 'I will be exalted among the ______.'",
+    options: ["People", "Nations", "Churches", "Mountains"],
+    correct: 1
+  },
+  {
+    section: "📅 Week 5 — Psalm 46:10",
+    ref: "Psalm 46:10",
+    type: "truefalse",
+    question: "Psalm 46:10 says 'Be still and know that I am Lord.'",
+    correct: false
+  },
+
+  // ===== WEEK 6 — James 1:17 =====
+  {
+    section: "📅 Week 6 — James 1:17",
+    ref: "James 1:17",
+    type: "fitb",
+    template: "Every good gift and every perfect gift is from ______, coming down from the Father of lights.",
+    answers: ["above"]
+  },
+  {
+    section: "📅 Week 6 — James 1:17",
+    ref: "James 1:17",
+    type: "mcq",
+    question: "James 1:17 calls God the Father of ______.",
+    options: ["Angels", "Nations", "Lights", "Children"],
+    correct: 2
+  },
+  {
+    section: "📅 Week 6 — James 1:17",
+    ref: "James 1:17",
+    type: "truefalse",
+    question: "James 1:17 says that in God there is no variation or shadow of turning.",
+    correct: true
+  }
+];
+
+let currentQ = 0, score = 0;
+let answered = new Array(QUESTIONS.length).fill(false);
+let userCorrect = new Array(QUESTIONS.length).fill(null);
+
+function renderQuestion(index) {
+  const q = QUESTIONS[index];
+  const container = document.getElementById('question-container');
+
+  let sectionHtml = '';
+
+  let bodyHtml = '';
+  if (q.type === 'fitb') {
+    const parts = q.template.split('______');
+    bodyHtml = `
+      <p class="question-text">"${parts[0]}<span style="color:var(--purple);font-weight:900">__________</span>${parts[1]}"</p>
+      <input type="text" class="blank-input" id="fitb-input-${index}" placeholder="Type your answer here..."
+        onkeydown="if(event.key==='Enter') checkFitb(${index})"
+        ${answered[index] ? 'disabled' : ''} />
+      ${!answered[index] ? `<br><button class="check-btn" onclick="checkFitb(${index})">✅ Check Answer</button>` : ''}
+    `;
+  } else if (q.type === 'mcq') {
+    const letters = ['A','B','C','D'];
+    const optHtml = q.options.map((o, i) => {
+      let cls = 'option-btn';
+      if (answered[index]) {
+        if (i === q.correct) cls += ' correct';
+        else if (userCorrect[index] === i && i !== q.correct) cls += ' wrong';
+      }
+      return `<button class="${cls}" onclick="checkMcq(${index}, ${i})" ${answered[index] ? 'disabled' : ''}>
+        <span class="opt-letter">${letters[i]}</span>${o}
+      </button>`;
+    }).join('');
+    bodyHtml = `<p class="question-text">${q.question}</p><div class="options-grid">${optHtml}</div>`;
+  } else if (q.type === 'truefalse') {
+    let tCls = 'tf-btn true-btn', fCls = 'tf-btn false-btn';
+    if (answered[index]) {
+      if (q.correct === true) tCls += ' correct'; else fCls += ' correct';
+      if (userCorrect[index] === false && q.correct === true) fCls += ' wrong';
+      if (userCorrect[index] === true && q.correct === false) tCls += ' wrong';
+    }
+    bodyHtml = `
+      <p class="question-text">"${q.question}"</p>
+      <div class="tf-grid">
+        <button class="${tCls}" onclick="checkTF(${index}, true)" ${answered[index]?'disabled':''}>✅ TRUE</button>
+        <button class="${fCls}" onclick="checkTF(${index}, false)" ${answered[index]?'disabled':''}>❌ FALSE</button>
+      </div>
+    `;
+  }
+
+  const feedbackHtml = answered[index] ? buildFeedback(index) : `<div class="feedback" id="feedback-${index}"></div>`;
+
+  container.innerHTML = `
+    ${sectionHtml}
+    <div class="section-header">
+      <span class="tag">${q.type === 'fitb' ? 'Fill in the Blank' : q.type === 'mcq' ? 'Multiple Choice' : 'True or False'}</span>
+      <h2>📖 ${q.ref}</h2>
+    </div>
+    <div class="question-card">
+      <span class="q-number">Question ${index + 1}</span>
+      ${bodyHtml}
+      ${feedbackHtml}
+    </div>
+  `;
+
+  if (answered[index] && q.type === 'fitb') {
+    const inp = document.getElementById(`fitb-input-${index}`);
+    if (inp) {
+      inp.value = q.answers[0];
+      inp.classList.add(userCorrect[index] ? 'correct' : 'wrong');
+    }
+  }
+  updateProgress();
+}
+
+function buildFeedback(index) {
+  const q = QUESTIONS[index];
+  const isCorrect = userCorrect[index] === true ||
+    (typeof userCorrect[index] === 'number' && userCorrect[index] === q.correct);
+  const correctAns = q.answers ? q.answers[0] : q.options ? q.options[q.correct] : q.correct;
+  const msg = isCorrect
+    ? `🎉 Correct! Well done, Bible Champion! <strong>${q.ref}</strong> — Keep memorising this verse!`
+    : `😅 Not quite! The correct answer is: <strong>"${correctAns}"</strong>. Practice makes perfect! 💪`;
+  return `<div class="feedback ${isCorrect?'correct-fb':'wrong-fb'} show">${msg}</div>`;
+}
+
+function checkFitb(index) {
+  if (answered[index]) return;
+  const q = QUESTIONS[index];
+  const inp = document.getElementById(`fitb-input-${index}`);
+  const val = inp.value.trim().toLowerCase();
+  const isCorrect = q.answers.some(a => val === a.toLowerCase() || val.includes(a.toLowerCase()));
+  userCorrect[index] = isCorrect;
+  answered[index] = true;
+  if (isCorrect) score++;
+  updateScoreDisplay();
+  renderQuestion(index);
+}
+
+function checkMcq(index, chosen) {
+  if (answered[index]) return;
+  const isCorrect = chosen === QUESTIONS[index].correct;
+  userCorrect[index] = chosen;
+  answered[index] = true;
+  if (isCorrect) score++;
+  updateScoreDisplay();
+  renderQuestion(index);
+}
+
+function checkTF(index, chosen) {
+  if (answered[index]) return;
+  const isCorrect = chosen === QUESTIONS[index].correct;
+  userCorrect[index] = chosen;
+  answered[index] = true;
+  if (isCorrect) score++;
+  updateScoreDisplay();
+  renderQuestion(index);
+}
+
+function navigate(dir) {
+  currentQ += dir;
+  if (currentQ < 0) currentQ = 0;
+  if (currentQ >= QUESTIONS.length) { showResults(); return; }
+  renderQuestion(currentQ);
+  document.getElementById('prev-btn').disabled = currentQ === 0;
+  document.getElementById('next-btn').textContent = currentQ === QUESTIONS.length - 1 ? 'Finish 🏁' : 'Next →';
+  document.getElementById('nav-counter').textContent = `${currentQ+1} / ${QUESTIONS.length}`;
+  document.getElementById('q-current').textContent = currentQ + 1;
+}
+
+function updateScoreDisplay() {
+  document.getElementById('score-display').textContent = score;
+  document.getElementById('total-display').textContent = answered.filter(Boolean).length;
+}
+
+function updateProgress() {
+  const done = answered.filter(Boolean).length;
+  const pct = Math.round((done / QUESTIONS.length) * 100);
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('pct-label').textContent = pct + '%';
+}
+
+function showResults() {
+  document.getElementById('quiz-area').style.display = 'none';
+  document.getElementById('results-screen').classList.add('show');
+  const pct = Math.round((score / QUESTIONS.length) * 100);
+  document.getElementById('result-score').textContent = `${score}/${QUESTIONS.length}`;
+  let trophy, title, msg;
+  if (pct >= 90)      { trophy='🏆'; title='BIBLE CHAMPION!'; msg='Outstanding! You really know your Scriptures! 🌟'; }
+  else if (pct >= 75) { trophy='🥇'; title='Amazing Job!'; msg="So impressive! Keep memorising God's Word! ✨"; }
+  else if (pct >= 60) { trophy='🥈'; title='Great Effort!'; msg='You\'re getting there! Review the scriptures and try again! 📖'; }
+  else if (pct >= 40) { trophy='🥉'; title='Keep Going!'; msg="Don't give up! Every champion starts somewhere. You've got this! 💪"; }
+  else                { trophy='📖'; title='Keep Studying!'; msg="Spend more time with God's Word — it will change your life! 🙏"; }
+  document.getElementById('trophy').textContent = trophy;
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-msg').textContent = msg;
+}
+
+function restartQuiz() {
+  currentQ = 0; score = 0;
+  answered = new Array(QUESTIONS.length).fill(false);
+  userCorrect = new Array(QUESTIONS.length).fill(null);
+  document.getElementById('results-screen').classList.remove('show');
+  document.getElementById('quiz-area').style.display = 'block';
+  document.getElementById('score-display').textContent = '0';
+  document.getElementById('total-display').textContent = '0';
+  document.getElementById('prev-btn').disabled = true;
+  document.getElementById('next-btn').textContent = 'Next →';
+  document.getElementById('q-current').textContent = '1';
+  document.getElementById('nav-counter').textContent = `1 / ${QUESTIONS.length}`;
+  updateProgress();
+  renderQuestion(0);
+}
+
+document.getElementById('q-total').textContent = QUESTIONS.length;
+document.getElementById('total-display').textContent = QUESTIONS.length;
+document.getElementById('nav-counter').textContent = `1 / ${QUESTIONS.length}`;
+renderQuestion(0);
+</script>
+</body>
+</html>
